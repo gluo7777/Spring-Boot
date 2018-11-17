@@ -3,12 +3,27 @@ package basicjdbc;
 import java.time.LocalTime;
 
 public class Task {
+	public static enum Type {
+		GOOGLE, REG
+	}
+
+	private long id;
 	private long taskId; // Google only
 	private String taskName;
 	private long listId; // Google only
 	private String listName;
 	private LocalTime time;
 	private String notes;
+	private String type;
+	private long accountId;
+
+	public final long getId() {
+		return id;
+	}
+
+	public final void setId(long id) {
+		this.id = id;
+	}
 
 	// tags
 	public final long getTaskId() {
@@ -59,10 +74,27 @@ public class Task {
 		this.notes = notes;
 	}
 
+	public final String getType() {
+		return type;
+	}
+
+	public final void setType(Type type) {
+		this.type = type.toString().toLowerCase();
+	}
+
+	public final long getAccountId() {
+		return accountId;
+	}
+
+	public final void setAccountId(long accountId) {
+		this.accountId = accountId;
+	}
+
 	@Override
 	public String toString() {
-		return "Task [taskId=" + taskId + ", taskName=" + taskName + ", listId=" + listId + ", listName=" + listName
-				+ ", time=" + time + ", notes=" + notes + "]";
+		return "Task [id=" + id + ", taskId=" + taskId + ", taskName=" + taskName + ", listId=" + listId + ", listName="
+				+ listName + ", time=" + time + ", notes=" + notes + ", type=" + type + ", accountId=" + accountId
+				+ "]";
 	}
 
 }
