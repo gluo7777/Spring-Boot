@@ -50,5 +50,7 @@
 		<module>simple-app</module>
 		<module>basic-jpa</module>
 		<module>basic-jdbc</module>
+		<module>basic-oauth2</module>
+		<module>bean-life-cycle</module>
 	</modules>
 </project>
