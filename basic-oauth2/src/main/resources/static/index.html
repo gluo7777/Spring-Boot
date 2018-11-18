@@ -19,7 +19,7 @@
 	<h1>Login</h1>
 	<h1>Welcome to my page!</h1>
 	<div class="content unauthenticated">
-		Login: <a href="/login">Facebook</a>
+		Login: <a href="/login/facebook">Facebook</a>
 	</div>
 	<div class="content authenticated">
 		<p>
@@ -31,46 +31,46 @@
 		'use strict';
 		// attempts to request against authenticated endpoint as soon as content loads
 		document.addEventListener('DOMContentLoaded', e => {
-		// handlers
-		document.querySelector('button').addEventListener('click', e => {
-			fetch('/logout', {
-				method: 'POST'
-				,headers: {
-					'X-XSRF-TOKEN': Cookies.get('XSRF-TOKEN')
+			// handlers
+			document.querySelector('button').addEventListener('click', e => {
+				fetch('/logout', {
+					method: 'POST'
+					,headers: {
+						'X-XSRF-TOKEN': Cookies.get('XSRF-TOKEN')
+					}
+				}).then(response => {
+					console.log(`logged out success: ${response.ok}`);
+					document.querySelector('.authenticated').querySelector('#user').innerText = '';
+					document.querySelector('.unauthenticated').classList.remove('hide');
+					document.querySelector('.authenticated').classList.add('hide');
+				}).catch(error => console.log(`Failed to log out. Reason: ${error.message}.`));
+			});
+			console.log('finished loading. starting request.');
+			const request = new Request('/user');
+			request.headers.append('X-Requested-With','XMLHttpRequest'); // needed to avoid redirect back to homepage
+			fetch(request).then(response => {
+				console.log(`Response=${response}`);
+				return response.ok ? response.json() : false;
+			}).then(result => {
+				if(result){
+					console.log(`Authentication success.`);
+					console.log(result);
+					document.querySelector('.unauthenticated').classList.add('hide');
+					const authContent = document.querySelector('.authenticated');
+					authContent.classList.remove('hide');
+					// get name of user
+					const name = result.userAuthentication.details.name;
+					authContent.querySelector('#user').innerText = `${name}`;
+				}else{
+					document.querySelector('.unauthenticated').classList.remove('hide');
+					document.querySelector('.authenticated').classList.add('hide');
+					console.log(`Authentication failed.`);
 				}
-			}).then(response => {
-				console.log(`logged out success: ${response.ok}`);
-				document.querySelector('.authenticated').querySelector('#user').innerText = '';
-				document.querySelector('.unauthenticated').classList.remove('hide');
-				document.querySelector('.authenticated').classList.add('hide');
-			}).catch(error => console.log(`Failed to log out. Reason: ${error.message}.`));
-		});
-		console.log('finished loading. starting request.');
-		const request = new Request('/user');
-		request.headers.append('X-Requested-With','XMLHttpRequest'); // needed to avoid redirect back to homepage
-		fetch(request).then(response => {
-			console.log(`Response=${response}`);
-			return response.ok ? response.json() : false;
-		}).then(result => {
-			if(result){
-				console.log(`Authentication success.`);
-				console.log(result);
-				document.querySelector('.unauthenticated').classList.add('hide');
-				const authContent = document.querySelector('.authenticated');
-				authContent.classList.remove('hide');
-				// get name of user
-				const name = result.userAuthentication.details.name;
-				authContent.querySelector('#user').innerText = `${name}`;
-			}else{
-				document.querySelector('.unauthenticated').classList.remove('hide');
-				document.querySelector('.authenticated').classList.add('hide');
-				console.log(`Authentication failed.`);
-			}
-		}).catch(error => {
-			console.log(`Request failed: ${error.message}`);
-			console.log('test');
-		});
-		console.log('finished request.');
+			}).catch(error => {
+				console.log(`Request failed: ${error.message}`);
+				console.log('test');
+			});
+			console.log('finished request.');
 		});
 	</script>
 </body>
