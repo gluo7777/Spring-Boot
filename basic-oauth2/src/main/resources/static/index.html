@@ -19,7 +19,7 @@
 	<h1>Login</h1>
 	<h1>Welcome to my page!</h1>
 	<div class="content unauthenticated">
-		Login: <a href="/login/facebook">Facebook</a>
+		Login: <a href="/login/facebook">Facebook</a> <a href="/login/github">Github</a>
 	</div>
 	<div class="content authenticated">
 		<p>
@@ -46,11 +46,16 @@
 				}).catch(error => console.log(`Failed to log out. Reason: ${error.message}.`));
 			});
 			console.log('finished loading. starting request.');
+			/*
+			 * TODO: Different OAuth2.0 providers (e.g. Google) could have different fields.
+			 * Important to parse principal to determine identity of provider before blindly setting it.
+			 */
 			const request = new Request('/user');
 			request.headers.append('X-Requested-With','XMLHttpRequest'); // needed to avoid redirect back to homepage
 			fetch(request).then(response => {
-				console.log(`Response=${response}`);
-				return response.ok ? response.json() : false;
+				console.log(response);
+				console.log(`response succes (response.status == 200 && !response.redirected) = ${response.status == 200 && !response.redirected}`);
+				return response.status == 200 && !response.redirected ? response.json() : false;
 			}).then(result => {
 				if(result){
 					console.log(`Authentication success.`);
@@ -68,7 +73,6 @@
 				}
 			}).catch(error => {
 				console.log(`Request failed: ${error.message}`);
-				console.log('test');
 			});
 			console.log('finished request.');
 		});

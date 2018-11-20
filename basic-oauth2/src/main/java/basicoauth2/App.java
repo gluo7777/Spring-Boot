@@ -1,6 +1,7 @@
 package basicoauth2;
-
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.Filter;
 
@@ -25,6 +26,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.filter.CompositeFilter;
 
 /**
  * Based off of: https://spring.io/guides/tutorials/spring-boot-oauth2/ For
@@ -65,6 +67,7 @@ public class App extends WebSecurityConfigurerAdapter {
 
 	@RequestMapping("/user")
 	public Principal user(Principal principal) {
+		System.out.println(principal.getName());
 		return principal;
 	}
 
@@ -77,37 +80,57 @@ public class App extends WebSecurityConfigurerAdapter {
 		// @formatter:off
 		// secure all end points
 		http.antMatcher("/**").authorizeRequests() // enable access restriction
-		// all other requests must be authenticated
-		// allow unauthenticated access to
-		// only these endpoints
-		// (whitelist)
-		.antMatchers("/", "/login**", "/webjars/**", "/error**", "/logout**") .permitAll().anyRequest().authenticated()
-		.and().exceptionHandling().authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/"))
-		// logout support and redirection
-		.and().logout().logoutSuccessUrl("/").permitAll()
-		// CSRF support
-		.and().csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-		// manually configure servlet authentication filter before basic filter
-		.and().addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
+				// all other requests must be authenticated
+				// allow unauthenticated access to
+				// only these endpoints
+				// (whitelist)
+				.antMatchers("/", "/login**", "/webjars/**", "/error**").permitAll().anyRequest()
+				.authenticated().and().exceptionHandling()
+				.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/"))
+				// logout support and redirection
+				.and().logout().logoutSuccessUrl("/").permitAll()
+				.clearAuthentication(true)
+				// CSRF support
+				.and().csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+				// manually configure servlet authentication filter before basic filter
+				.and().addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
 		;
 		// @formatter:on
 	}
 
 	/**
-	 * Create a servlet filter
+	 * Create a servlet filter as a container for multiple sub filters. One sub
+	 * filter for each different OAuth2.0 provider.
 	 * 
 	 * @return
 	 */
 	private Filter ssoFilter() {
+		/**
+		 * A generic composite servlet Filter that just delegates its behaviorto a chain
+		 * (list) of user-supplied filters, achieving the functionality of a
+		 * FilterChain, but conveniently using only Filter instances.
+		 */
+		CompositeFilter filter = new CompositeFilter();
+		List<Filter> filters = new ArrayList<>();
+		filters.add(facebookFilter());
+		filters.add(githubFilter());
+		filter.setFilters(filters);
+		return filter;
+	}
+
+	private OAuth2ClientAuthenticationProcessingFilter facebookFilter() {
 		// An OAuth2 client filter that can be used to acquire an OAuth2 access token
 		// from an authorization server,
 		// and load anauthentication object into the SecurityContext
-		// note this creates an authentication end point at /login/facebook instead of the usual /login, so need to change front end as well
-		OAuth2ClientAuthenticationProcessingFilter facebookFilter = new OAuth2ClientAuthenticationProcessingFilter(
-				"/login/facebook");
+		// note this creates an authentication end point at /login/facebook instead of
+		// the usual /login, so need to change front end as well
+		OAuth2ClientAuthenticationProcessingFilter facebookFilter = new OAuth2ClientAuthenticationProcessingFilter("/login/facebook");
 		// Rest template that is able to make OAuth2-authenticated REST requests with
 		// the credentials of the provided resource.
-		// need this template for http requests to facebook (with client app credentials) to obtain access token
+		// need this template for http requests to facebook (with client app
+		// credentials) to obtain access token
+		// Note that both the OAuth2ClientAuthenticationProcessingFilter and UserInfoTokenServices requires
+		// facebookTemplate because they both need to make authenticated HTTP calls to retrieve something.
 		OAuth2RestTemplate facebookTemplate = new OAuth2RestTemplate(facebook(), oauth2ClientContext);
 		facebookFilter.setRestTemplate(facebookTemplate);
 		// need this service for http requests to resource server???
@@ -117,7 +140,52 @@ public class App extends WebSecurityConfigurerAdapter {
 		facebookFilter.setTokenServices(tokenServices);
 		return facebookFilter;
 	}
+	
+	private OAuth2ClientAuthenticationProcessingFilter githubFilter() {
+		// An OAuth2 client filter that can be used to acquire an OAuth2 access token
+		// from an authorization server,
+		// and load anauthentication object into the SecurityContext
+		// note this creates an authentication end point at /login/facebook instead of
+		// the usual /login, so need to change front end as well
+		OAuth2ClientAuthenticationProcessingFilter githubFilter = new OAuth2ClientAuthenticationProcessingFilter("/login/github");
+		// Rest template that is able to make OAuth2-authenticated REST requests with
+		// the credentials of the provided resource.
+		// need this template for http requests to facebook (with client app
+		// credentials) to obtain access token
+		OAuth2RestTemplate githubTemplate = new OAuth2RestTemplate(github(), oauth2ClientContext);
+		githubFilter.setRestTemplate(githubTemplate);
+		// need this service for http requests to resource server???
+		UserInfoTokenServices tokenServices = new UserInfoTokenServices(githubResource().getUserInfoUri(),
+				github().getClientId());
+		tokenServices.setRestTemplate(githubTemplate);
+		githubFilter.setTokenServices(tokenServices);
+		return githubFilter;
+	}
 
+	/**
+	 * client registration with Facebook properties injected from environment
+	 * 
+	 * @return
+	 */
+	@Bean
+	@ConfigurationProperties("github.client")
+	public AuthorizationCodeResourceDetails github() {
+		return new AuthorizationCodeResourceDetails();
+	}
+
+	/**
+	 * Configuration properties for OAuth2 Resources. Overriding
+	 * (prefix="security.oauth2.resource") to provide different types of resources
+	 * of each oauth provider
+	 * 
+	 * @return
+	 */
+	@Bean
+	@ConfigurationProperties("github.resource")
+	public ResourceServerProperties githubResource() {
+		return new ResourceServerProperties();
+	}
+	
 	/**
 	 * client registration with Facebook properties injected from environment
 	 * 
@@ -130,8 +198,10 @@ public class App extends WebSecurityConfigurerAdapter {
 	}
 
 	/**
-	 * Configuration properties for OAuth2 Resources.
-	 * Overriding (prefix="security.oauth2.resource") to provide different types of resources of each oauth provider
+	 * Configuration properties for OAuth2 Resources. Overriding
+	 * (prefix="security.oauth2.resource") to provide different types of resources
+	 * of each oauth provider
+	 * 
 	 * @return
 	 */
 	@Bean
@@ -139,27 +209,33 @@ public class App extends WebSecurityConfigurerAdapter {
 	public ResourceServerProperties facebookResource() {
 		return new ResourceServerProperties();
 	}
-	
-	/*@Bean
-	@ConfigurationProperties("google.resource")
-	public ResourceServerProperties googleResource() {
-		return new ResourceServerProperties();
-	}*/
-	
+
+	/*
+	 * @Bean
+	 * 
+	 * @ConfigurationProperties("google.resource") public ResourceServerProperties
+	 * googleResource() { return new ResourceServerProperties(); }
+	 */
+
 	/**
-	 * Handling redirects from this app to Facebook
-	 * Registered provided filter into application context
-	 * @param filter this is pulled from the Application Context after adding {@link EnableOAuth2Client}
+	 * Handling redirects from this app to Facebook Registered provided filter into
+	 * application context
+	 * 
+	 * @param filter
+	 *            this is pulled from the Application Context after adding
+	 *            {@link EnableOAuth2Client}
 	 * @return
 	 */
 	@Bean
 	public FilterRegistrationBean<OAuth2ClientContextFilter> oauth2ClientFilterRegistration(
-	    OAuth2ClientContextFilter filter) {
-	  FilterRegistrationBean<OAuth2ClientContextFilter> registration = new FilterRegistrationBean<OAuth2ClientContextFilter>();
-	  registration.setFilter(filter);
-	  // set a low number so it has higher precedence than the main Spring Security filter
-	  // lets us handle redirects from exceptions as well
-	  registration.setOrder(-100);
-	  return registration;
+			OAuth2ClientContextFilter filter) {
+		FilterRegistrationBean<OAuth2ClientContextFilter> registration = new FilterRegistrationBean<OAuth2ClientContextFilter>();
+		registration.setFilter(filter);
+		// set a low number so it has higher precedence than the main Spring Security
+		// filter
+		// lets us handle redirects from exceptions as well
+		registration.setOrder(-100);
+		return registration;
 	}
 }
+
