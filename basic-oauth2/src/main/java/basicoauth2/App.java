@@ -114,6 +114,7 @@ public class App extends WebSecurityConfigurerAdapter {
 		List<Filter> filters = new ArrayList<>();
 		filters.add(facebookFilter());
 		filters.add(githubFilter());
+		// TODO: add google filter
 		filter.setFilters(filters);
 		return filter;
 	}
@@ -160,6 +161,27 @@ public class App extends WebSecurityConfigurerAdapter {
 		tokenServices.setRestTemplate(githubTemplate);
 		githubFilter.setTokenServices(tokenServices);
 		return githubFilter;
+	}
+	
+	private OAuth2ClientAuthenticationProcessingFilter googleFilter() {
+		// An OAuth2 client filter that can be used to acquire an OAuth2 access token
+		// from an authorization server,
+		// and load anauthentication object into the SecurityContext
+		// note this creates an authentication end point at /login/facebook instead of
+		// the usual /login, so need to change front end as well
+		OAuth2ClientAuthenticationProcessingFilter googleFilter = new OAuth2ClientAuthenticationProcessingFilter("/login/google");
+		// Rest template that is able to make OAuth2-authenticated REST requests with
+		// the credentials of the provided resource.
+		// need this template for http requests to facebook (with client app
+		// credentials) to obtain access token
+		OAuth2RestTemplate googleTemplate = new OAuth2RestTemplate(google(), oauth2ClientContext);
+		googleFilter.setRestTemplate(googleTemplate);
+		// need this service for http requests to resource server???
+		UserInfoTokenServices tokenServices = new UserInfoTokenServices(googleResource().getUserInfoUri(),
+				google().getClientId());
+		tokenServices.setRestTemplate(googleTemplate);
+		googleFilter.setTokenServices(tokenServices);
+		return googleFilter;
 	}
 
 	/**
@@ -209,13 +231,19 @@ public class App extends WebSecurityConfigurerAdapter {
 	public ResourceServerProperties facebookResource() {
 		return new ResourceServerProperties();
 	}
+	
 
-	/*
-	 * @Bean
-	 * 
-	 * @ConfigurationProperties("google.resource") public ResourceServerProperties
-	 * googleResource() { return new ResourceServerProperties(); }
-	 */
+	@Bean
+	@ConfigurationProperties("google.client")
+	public AuthorizationCodeResourceDetails google() {
+		return new AuthorizationCodeResourceDetails();
+	}
+
+	@Bean
+	@ConfigurationProperties("google.resource")
+	public ResourceServerProperties googleResource() {
+		return new ResourceServerProperties();
+	}
 
 	/**
 	 * Handling redirects from this app to Facebook Registered provided filter into

@@ -1,0 +1,11 @@
+# Authorization parameters
+
+google:
+  clientId: 
+  clientSecret:
+  responseType: code
+  scope: "openid email" 
+  userAuthorizationUri: "https://accounts.google.com/o/oauth2/v2/auth"
+  accessTokenUri: "https://www.googleapis.com/oauth2/v4/token"
+  redirectUri: http://localhost:${server.port}/access
+  userInfoUri: https://www.googleapis.com/userinfo/v2/me

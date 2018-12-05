@@ -52,5 +52,6 @@
 		<module>basic-jdbc</module>
 		<module>basic-oauth2</module>
 		<module>bean-life-cycle</module>
+		<module>GoogleOAuth2OpenIdRestAPI</module>
 	</modules>
 </project>
