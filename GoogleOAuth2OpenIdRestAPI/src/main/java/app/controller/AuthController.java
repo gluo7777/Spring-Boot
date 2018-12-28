@@ -8,6 +8,7 @@ import java.util.Optional;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +47,8 @@ public class AuthController {
 	Logger log = LoggerFactory.getLogger(AuthController.class);
 
 	@GetMapping("/login")
-	public ResponseEntity<?> getAuthorization(HttpServletRequest servletRequest) {
-		String sessionId = Session.getSessionIdFromRequest(servletRequest);
+	public ResponseEntity<?> getAuthorization(HttpSession httpSession) {
+		String sessionId = httpSession.getId();
 		if (sessionId != null && sessionId.equals(session.getSessionId())) {
 			session.setCsrfToken(Session.generate());
 			HttpHeaders parameters = buildAuthorizationHeaders(session.getCsrfToken());

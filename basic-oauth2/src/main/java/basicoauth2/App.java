@@ -1,4 +1,5 @@
 package basicoauth2;
+
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
@@ -125,13 +126,16 @@ public class App extends WebSecurityConfigurerAdapter {
 		// and load anauthentication object into the SecurityContext
 		// note this creates an authentication end point at /login/facebook instead of
 		// the usual /login, so need to change front end as well
-		OAuth2ClientAuthenticationProcessingFilter facebookFilter = new OAuth2ClientAuthenticationProcessingFilter("/login/facebook");
+		OAuth2ClientAuthenticationProcessingFilter facebookFilter = new OAuth2ClientAuthenticationProcessingFilter(
+				"/login/facebook");
 		// Rest template that is able to make OAuth2-authenticated REST requests with
 		// the credentials of the provided resource.
 		// need this template for http requests to facebook (with client app
 		// credentials) to obtain access token
-		// Note that both the OAuth2ClientAuthenticationProcessingFilter and UserInfoTokenServices requires
-		// facebookTemplate because they both need to make authenticated HTTP calls to retrieve something.
+		// Note that both the OAuth2ClientAuthenticationProcessingFilter and
+		// UserInfoTokenServices requires
+		// facebookTemplate because they both need to make authenticated HTTP calls to
+		// retrieve something.
 		OAuth2RestTemplate facebookTemplate = new OAuth2RestTemplate(facebook(), oauth2ClientContext);
 		facebookFilter.setRestTemplate(facebookTemplate);
 		// need this service for http requests to resource server???
@@ -141,14 +145,15 @@ public class App extends WebSecurityConfigurerAdapter {
 		facebookFilter.setTokenServices(tokenServices);
 		return facebookFilter;
 	}
-	
+
 	private OAuth2ClientAuthenticationProcessingFilter githubFilter() {
 		// An OAuth2 client filter that can be used to acquire an OAuth2 access token
 		// from an authorization server,
 		// and load anauthentication object into the SecurityContext
 		// note this creates an authentication end point at /login/facebook instead of
 		// the usual /login, so need to change front end as well
-		OAuth2ClientAuthenticationProcessingFilter githubFilter = new OAuth2ClientAuthenticationProcessingFilter("/login/github");
+		OAuth2ClientAuthenticationProcessingFilter githubFilter = new OAuth2ClientAuthenticationProcessingFilter(
+				"/login/github");
 		// Rest template that is able to make OAuth2-authenticated REST requests with
 		// the credentials of the provided resource.
 		// need this template for http requests to facebook (with client app
@@ -162,14 +167,16 @@ public class App extends WebSecurityConfigurerAdapter {
 		githubFilter.setTokenServices(tokenServices);
 		return githubFilter;
 	}
-	
+
+	@SuppressWarnings("unused")
 	private OAuth2ClientAuthenticationProcessingFilter googleFilter() {
 		// An OAuth2 client filter that can be used to acquire an OAuth2 access token
 		// from an authorization server,
 		// and load anauthentication object into the SecurityContext
 		// note this creates an authentication end point at /login/facebook instead of
 		// the usual /login, so need to change front end as well
-		OAuth2ClientAuthenticationProcessingFilter googleFilter = new OAuth2ClientAuthenticationProcessingFilter("/login/google");
+		OAuth2ClientAuthenticationProcessingFilter googleFilter = new OAuth2ClientAuthenticationProcessingFilter(
+				"/login/google");
 		// Rest template that is able to make OAuth2-authenticated REST requests with
 		// the credentials of the provided resource.
 		// need this template for http requests to facebook (with client app
@@ -207,7 +214,7 @@ public class App extends WebSecurityConfigurerAdapter {
 	public ResourceServerProperties githubResource() {
 		return new ResourceServerProperties();
 	}
-	
+
 	/**
 	 * client registration with Facebook properties injected from environment
 	 * 
@@ -231,7 +238,6 @@ public class App extends WebSecurityConfigurerAdapter {
 	public ResourceServerProperties facebookResource() {
 		return new ResourceServerProperties();
 	}
-	
 
 	@Bean
 	@ConfigurationProperties("google.client")
@@ -249,9 +255,8 @@ public class App extends WebSecurityConfigurerAdapter {
 	 * Handling redirects from this app to Facebook Registered provided filter into
 	 * application context
 	 * 
-	 * @param filter
-	 *            this is pulled from the Application Context after adding
-	 *            {@link EnableOAuth2Client}
+	 * @param filter this is pulled from the Application Context after adding
+	 *               {@link EnableOAuth2Client}
 	 * @return
 	 */
 	@Bean
@@ -266,4 +271,3 @@ public class App extends WebSecurityConfigurerAdapter {
 		return registration;
 	}
 }
-
