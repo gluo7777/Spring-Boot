@@ -36,9 +36,11 @@ public class Session {
 		Cookie[] cookies = request.getCookies();
 		LOG.info("Recieved cookies: {}", (Object[]) cookies);
 		String sessionId = null;
-		for (Cookie cookie : cookies) {
-			if (cookie.getName().equals(Session.SESSION_ID)) {
-				sessionId = cookie.getValue();
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				if (cookie.getName().equals(Session.SESSION_ID)) {
+					sessionId = cookie.getValue();
+				}
 			}
 		}
 		return sessionId;
