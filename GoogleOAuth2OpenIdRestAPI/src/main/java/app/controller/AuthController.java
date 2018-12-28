@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
@@ -30,7 +29,6 @@ import app.Session;
 import app.security.ClientResponse;
 import app.security.Google;
 import app.security.TokenResponse;
-import app.security.UserDetails;
 import app.security.UserDetails2;
 
 @RestController
@@ -62,7 +60,8 @@ public class AuthController {
 	}
 
 	@GetMapping("/access")
-	public ResponseEntity<?> getAccessToken(@RequestParam Map<String, String> parameters, HttpServletResponse servletResponse) throws URISyntaxException {
+	public ResponseEntity<?> getAccessToken(@RequestParam Map<String, String> parameters,
+			HttpServletResponse servletResponse) throws URISyntaxException {
 		log.info("Received parameters={}", parameters);
 		String csrfToken = Optional.ofNullable(parameters.get("state")).orElse("");
 		if (csrfToken.equals(session.getCsrfToken())) {
@@ -82,14 +81,15 @@ public class AuthController {
 				session.setAuthenticated(true);
 				servletResponse.addCookie(new Cookie(Session.SESSION_ID, session.getSessionId()));
 				// make call to retrieve user details
-				request = RequestEntity.get(new URI(google.getUserInfoUri())).header("Authorization", session.getAccessToken()).build();
+				request = RequestEntity.get(new URI(google.getUserInfoUri()))
+						.header("Authorization", session.getAccessToken()).build();
 				ResponseEntity<UserDetails2> response2 = this.securityTemplate.exchange(request, UserDetails2.class);
 				session.setDetails(response2.getBody());
 				// return authenticated response
 				ClientResponse clientResponse = new ClientResponse();
 				clientResponse.setName(session.getDetails().getName());
 				return ResponseEntity.status(HttpStatus.OK).body(clientResponse);
-			}else {
+			} else {
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 			}
 		} else {
