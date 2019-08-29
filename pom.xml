@@ -21,6 +21,7 @@
 	</properties>
 
 	<dependencies>
+<!--		Spring Dependencies-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -35,6 +36,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
+<!--		Apache-->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.9</version>
 		</dependency>
 	</dependencies>
 
@@ -55,5 +62,6 @@
 		<module>GoogleOAuth2OpenIdRestAPI</module>
 		<module>basic-spring-data-redis</module>
 		<module>spring-session-redis</module>
+		<module>session-cookie-management</module>
 	</modules>
 </project>

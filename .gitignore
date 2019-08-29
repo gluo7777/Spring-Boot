@@ -4,3 +4,4 @@ target/
 **/demo/**
 !.gitignore
 deploy.sh
+application-dev.properties
