@@ -63,5 +63,7 @@
 		<module>basic-spring-data-redis</module>
 		<module>spring-session-redis</module>
 		<module>session-cookie-management</module>
-	</modules>
+		<module>spring-react</module>
+        <module>csrf-server</module>
+    </modules>
 </project>

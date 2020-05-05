@@ -5,3 +5,5 @@ target/
 !.gitignore
 deploy.sh
 application-dev.properties
+node_modules
+*.iml

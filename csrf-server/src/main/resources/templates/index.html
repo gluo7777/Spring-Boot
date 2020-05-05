@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Console</title>
+</head>
+<body>
+ <h1>Welcome to your homepage, fellow user!</h1>
+ <p>Logged user: <span th:text="${#authentication.name}">Bob</span></p>
+ <p>Roles: <span th:text="${#principal.authorities}">[ROLE_USER, ROLE_ADMIN]</span></p>
+</body>
+</html>
